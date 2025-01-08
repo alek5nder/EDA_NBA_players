@@ -1,0 +1,12 @@
+#toc {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  max-width: 300px;
+  overflow-y: auto;
+  height: 90%;
+  border: 1px solid #ddd;
+  padding: 10px;
+  background-color: white;
+  z-index: 1000;
+}

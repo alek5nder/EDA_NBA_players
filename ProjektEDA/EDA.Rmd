@@ -1,0 +1,563 @@
+---
+title: "Jakim koszykarzem byłby Robert Lewandowski?"
+subtitle: "EDA zawodników NBA."
+
+author: "Aleksander Jasiński"
+date: "`r Sys.Date()`"
+output:
+  cleanrmd::html_document_clean:
+    theme: water
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+    css: custom.css
+---
+
+## Wykorzystane pakiety
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(visdat)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(tidyr)
+library(fmsb)
+```
+
+# Wstęp
+
+## Wprowadzenie
+
+Piłka nożna, siatkówka, wyścigi samochodowe czy też tenis ziemny, to tylko część z wielu bardzo dobrze opłacanych sportów, których najlepsi uczestnicy już od lat widnieją jako milionerzy (o ile nie zostali jeszcze multimilionerami). Czy zastanawiałeś się kiedykolwiek **jacy sportowcy zarabiają najwięcej**? Część osób bez zastanowienia mogłaby wskazać piłkarzy (od wielu lat najpopularniejszy sport świata) bądź golfa (w końcu grający pół-amatorsko właściciel międzynarodowej firmy również może zostać uznany za sportowca). Rzeczywistość jest jednak inna, przynajmniej według opublikowanej przez magazyn Forbes *Listy Najlepiej Zarabiających sportowców* ([Forbes 2024 World's Highest-Paid Athletes List](https://www.forbes.com/lists/athletes/)).
+
+Po uproszczonej obróbce zestawienie 5 najlepiej zarabiających sportowców prezentuje się następująco:
+
+```{r}
+
+athletes_forbes <- 
+  read.csv("C:/Users/ajasi/OneDrive/Pulpit/Studia/WdAD/Projekt EDA/top50AthletesForbes.csv",
+                            sep = ";",
+                            header = TRUE, 
+                            stringsAsFactors = FALSE)
+
+athletes_forbes[] <- lapply(athletes_forbes, 
+                            function(x) {if (is.character(x)) {
+    iconv(x, from = "latin1", to = "UTF-8", sub = "")
+  } else {x}
+})
+
+athletes_forbes <- athletes_forbes[, -1]
+
+athletes_forbes <- athletes_forbes %>% select(2, 1, everything())
+
+kable(head(athletes_forbes[, 1:4], 5))
+
+```
+
+Rozszerzając zakres rankingu do 50 miejsca możemy zauważyć, że aż na 19 pozycjach uplasowały się osoby grające w koszykówkę. Jest to największa grupa spośród wszystkich obserwowanych:
+
+```{r}
+athletes_forbes_summary <- athletes_forbes %>%
+  group_by(SPORT) %>%
+  summarise(
+    liczba_sportowcow = n()
+  )
+kable(athletes_forbes_summary)
+```
+
+Dlaczego koszykarze mają tyle płacone? Jakich warunków fizycznych potrzebuję żeby samemu zostać zawodnikiem NBA i zarabiać miliony? Czy współczesna liga koszykarska zdominowana jest przez krzepkich i młodych graczy, czy przez starszych i doświadczonych weteranów? Na te oraz inne pytania postaram się odpowiedzieć w mojej analizie eksploracyjnej, zaczynając od przeanalizowania profilu przeciętnego koszykarza na przestrzeni lat, kończąc na odpowiedzi na postawione w tytule mojej pracy pytanie.
+
+## Eksplorowana baza danych
+
+Podstawę moich obliczeń stanowić będzie baza danych `nbaPlayers` ([Link do bazy danych](https://www.kaggle.com/datasets/justinas/nba-players-data/discussion?sort=hotness "Link do bazy danych"){.uri}). Zacznijmy od jej **wczytania** oraz **przedstawienia zmiennych**:
+
+```{r}
+nba_players <- read.csv("C:/Users/ajasi/OneDrive/Pulpit/Studia/WdAD/Projekt EDA/all_seasons.csv")
+colnames(nba_players)
+```
+
+Wyjaśnijmy kilka z nich:
+
+-   `college`: Nazwa uczelni, na której zawodnik grał przed przejściem do NBA (może być pusta)
+-   `draft_year`: Rok, w którym zawodnik został wybrany w drafcie do NBA.
+-   `draft_round`: Runda draftu.
+-   `draft_number`: Numer wyboru w drafcie.
+-   `gp`: Liczba rozegranych meczów w sezonie.
+-   `pts`: Średnia punktów na mecz.
+-   `reb`: Średnia zbiórek na mecz.
+-   `ast`: Średnia asyst na mecz.
+-   `net_rating`: Różnica punktów na 100 posiadań.
+-   `oreb_pct`: Procent ofensywnych zbiórek.
+-   `dreb_pct`: Procent defensywnych zbiórek.
+-   `usg_pct`: Procent posiadania piłki.
+-   `ts_pct`: Efektywność rzutów (true shooting).
+-   `ast_pct`: Procent asyst.
+
+## Sprawdzanie spójności danych
+
+```{r include=FALSE}
+nba_players$draft_number[(nba_players$draft_number==0)] <- NA
+nba_players$draft_number[(nba_players$draft_number=="Undrafted")] <- NA
+```
+
+Sprawdźmy spójność w datasecie `nba_players`. Zacznijmy od wyszukania brakujących danych:
+
+```{r}
+nba_players %>%
+  summarise_all(~ sum(is.na(.))) %>%
+  gather(key = "Kolumna", value = "MissingCount") %>%
+  filter(MissingCount > 0)
+```
+
+Jedyne brakujące dane znajdują się w kolumnie `draft_number`. W NBA istnieją przypadki, gdzie gracze dołączają do ligi w inny sposób. Niektórzy zawodnicy, szczególnie z innych lig międzynarodowych, mogą dołączyć do NBA bez formalnego uczestnictwa w drafcie. Przyporządkujmy takim zawodnikom *nr draftu równy 0*.
+
+```{r}
+nba_players$draft_number[is.na(nba_players$draft_number)] <- 0
+
+```
+
+Zwizualizujmy sobie teraz strukturę naszych danych:
+
+```{r}
+vis_dat(nba_players)
+```
+
+Zestaw danych `nba_players` wydaje się być przygotowany do analizy.
+
+# Analiza Eksploracyjna Danych
+
+## Dlaczego koszykarz powinien być wysoki, ale równie dobrze nie musi?
+
+Kim są koszykarze? Poza faktem bycia bardzo majętnymi, są to tez osoby, które bez większych trudności ściągną mąkę usytuowaną na najwyższej półce bądź wymienią żarówkę bez posiłkowania się drabiną. Wzrost jest bezprecedensowo jednym z najważniejszych atrybutów koszykarza. Tak przynajmniej każdy z nas ma stereotypowo utrwalone w głowie. Sprawdźmy jak na przestrzeni lat punktowali zawodnicy ze wzrostem powyżej średniej, a jak Ci ze wzrostem \< 200 cm:
+
+```{r}
+
+nba_players$height_category <- cut(nba_players$player_height,
+                                   breaks = c(-Inf, 180, 190, 200, 210, Inf),
+                                   labels = c("<180", "180-190", "190-200", "200-210", ">210"))
+
+average_stats <- aggregate(cbind(pts, reb, ast) ~ height_category, 
+                           data = nba_players, 
+                           FUN = mean, na.rm = TRUE)
+
+average_stats_long <- average_stats %>%
+  pivot_longer(cols = c("pts", "reb", "ast"), names_to = "stat", values_to = "value") %>%
+  mutate(stat = factor(stat, levels = c("pts", "reb", "ast")),
+         stat_order = case_when(
+           stat == "pts" ~ 1,
+           height_category %in% c("<180", "180-190") & stat == "reb" ~ 2,
+           TRUE ~ 3
+         ))
+
+ggplot(average_stats_long, aes(x = height_category, y = value, fill = stat)) +
+  geom_col(position = "stack", width = 0.7) +
+  scale_fill_manual(values = c("pts" = "dodgerblue", "reb" = "goldenrod", "ast" = "forestgreen"),
+                    labels = c("pts" = "Punkty", "reb" = "Zbiórki", "ast" = "Asysty")) +
+  labs(title = "Średnie statystyki graczy NBA w zależności od wzrostu",
+       x = "Kategoria wzrostu",
+       y = "Średnia wartość",
+       fill = "Statystyka") +
+  theme_minimal(base_size = 15) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+-   Wyżsi gracze wyróżniają się w zbiórkach, co jest zgodne z fizycznymi wymaganiami tej umiejętności – **wyższy wzrost ułatwia zdobywanie piłki w grze pod koszem**.
+-   Niżsi gracze wykazują większą zdolność do asystowania, co sugeruje, że są bardziej skłonni pełnić rolę **rozgrywających**, dystrybuujących piłkę i tworzących okazje do zdobywania punktów.
+-   Wyżsi koszykarze niekoniecznie są lepsi we wszystkich aspektach gry. Choć mają przewagę w zbiórkach, zawodnicy o niższym wzroście są bardziej wszechstronni w zakresie asyst, co czyni ich ważnymi w roli rozgrywających. Z kolei średni wzrost jest optymalny dla zdobywania punktów.
+
+## Czy na przestrzeni lat koszykarze urośli?
+
+Wiemy już, że bardzo wysoki wzrost (\>200 cm), choć często postrzegany jako atut, nie jest cechą decydującą o zostaniu wybitnym koszykarzem. Niemniej jednak, warto przyjrzeć się, jak zmieniał się profil zawodników zapełniających boiska NBA na przestrzeni ostatnich trzech dekad. Zrozumienie tych zmian może pomóc wyjaśnić, jak ewoluował styl gry oraz jakie nowe umiejętności zyskały na znaczeniu w nowoczesnej koszykówce.
+
+```{r}
+nba_players <- nba_players %>%
+  mutate(
+    decade = case_when(
+      season >= 1996 & season <= 2006 ~ "1996-2006",
+      season >= 2006 & season <= 2016 ~ "2006-2016",
+      season >= 2016 & season <= 2023 ~ "2016-2023"
+    )
+  )
+
+ggplot(nba_players, aes(x = decade, y = player_height, fill = decade)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 16, outlier.size = 2) +
+  labs(
+    title = "Rozkład wzrostu zawodników NBA w dekadach",
+    x = "Dekada",
+    y = "Wzrost (cm)"
+  ) +
+  theme_minimal() +
+  scale_fill_manual(values = c("1996-2006" = "dodgerblue", "2006-2016" =
+                                 "forestgreen", "2016-2023" = "goldenrod"))
+
+```
+
+Nie możemy zauważyć wyraźnej tendencji zmiany wzrostu lub mediany wzrostu zawodników w ciągu ostatnich trzech dekad. To może sugerować, że średnia wysokość zawodników NBA pozostaje stabilna, z drobnymi wahaniami w zależności od okresu.
+
+We wszystkich dekadach występują wartości odstające, reprezentowane przez czerwone punkty. Najwięcej wartości odstających widać w zakresie 1996-2006 i 2006-2016.W trzeciej dekadzie (2016-2023) odnotowano mniej wartości odstających, co może wskazywać na bardziej jednolity wzrost graczy. Koszykówka mogła ewoluować w stronę **większego zróżnicowania ról graczy**, gdzie wzrost nie jest już tak wyraźnie zróżnicowany, a bardziej liczą się umiejętności techniczne, mobilność i wszechstronność.
+
+## Czy wybór w drafcie ma odzwierciedlenie na boisku?
+
+Wybór zawodnika w drafcie NBA jest często postrzegany jako **kluczowy moment** dla jego kariery. Miejsce, z którego zawodnik zostaje wybrany, często wiąże się z wysokimi oczekiwaniami zarówno ze strony drużyny, jak i fanów. Wysokie numery w drafcie zazwyczaj świadczą o wyjątkowych umiejętnościach i potencjale, które skauci i analitycy dostrzegają u młodych talentów. Jednak czy sam wybór w drafcie faktycznie przekłada się na przyszłe sukcesy na parkiecie? Sprawdźmy to.
+
+```{r warning=FALSE}
+nba_players$draft_number <- as.numeric(nba_players$draft_number)
+cor_draft_gp <- cor(nba_players$draft_number, nba_players$gp, use = "complete.obs")
+cor_draft_gp
+```
+
+Z powyższej korelacji dowiadujemy, że **im wcześniejszy numer w drafcie, tym większa tendencja do większej liczby rozegranych meczów**. Czyli Ci wybrani jako pierwsi zazwyczaj są "bardziej użyteczni" dla drużyny, rozgrywając większą ilość spotkań. Korelacja ta jednak jest słabą zależnością *(mamy przedział od -0.2 do -0.3)*.
+
+```{r warning=FALSE}
+nba_players <- nba_players %>%
+  mutate(draft_group = case_when(
+    draft_number >= 1 & draft_number <= 10 ~ "Top 10",
+    draft_number <= 30 ~ "11-30",
+    TRUE ~ "31+"
+  ))
+
+ggplot(nba_players, aes(x = net_rating, fill = draft_group)) +
+  geom_density(alpha = 0.6) +
+  scale_fill_manual(values = c("Top 10" = "dodgerblue", "11-30" = "forestgreen", "31+" = "goldenrod")) +
+  xlim(-50, 50) +
+  labs(
+    title = "Rozkład Net Rating w zależności od grupy draftu",
+    x = "Net Rating",
+    y = "Gęstość",
+    fill = "Grupa draftu"
+  ) +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14),
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "top"
+  )
+
+```
+
+-   Pozycja w drafcie nie gwarantuje wysokiego `net-rating`, ponieważ wszystkie grupy mają zbliżony rozkład.
+-   Zawodnicy z grupy Top 10 mają potencjał.
+-   Grupa **31+** ma węższy szczyt - mniejsza zmienność. Oznacza to, że gracze z tej grupy są bardziej jednolici w swoich wynikach (przeciętni).
+
+## Późny wybór, fenomenalne wyniki.
+
+W poprzednim punkcie przeanalizowaliśmy zależność między miejscem wyboru zawodnika w drafcie a jego późniejszymi wynikami na parkiecie. Wykazaliśmy, że w większości przypadków, im wyżej gracz został wybrany, tym większe prawdopodobieństwo, że stanie się on kluczową postacią swojej drużyny. Jednak historia NBA pełna jest przykładów zawodników, którzy, **mimo późnego wyboru, zdołali osiągnąć fenomenalne rezultaty**, zaskakując ekspertów i kibiców na całym świecie.
+
+```{r}
+late_pick_stars <- nba_players %>%
+  filter(draft_number > 30,
+         oreb_pct > quantile(oreb_pct, 0.75),
+         dreb_pct > quantile(dreb_pct, 0.75),
+         ast_pct > quantile(ast_pct, 0.75)) %>%
+  arrange(desc(ts_pct))
+kable(late_pick_stars[, c("player_name", "draft_number", "season","oreb_pct", "dreb_pct", "usg_pct", "ts_pct", "ast_pct")])
+
+```
+
+Nikola Jokić jest doskonałym przykładem gracza, który osiągnął niesamowite sukcesy pomimo relatywnie niskiego miejsca w drafcie. Wybrany z **numerem 41 w drafcie** 2014 roku, Jokić od tamtej pory wyrósł na jedną z największych gwiazd NBA, pokazując, że umiejętności i potencjał mogą ujawnić się niezależnie od miejsca wyboru. Sprawdźmy jak przebiegała jego kariera w porównaniu do zawodników z TOP 10 wyborów draftu. Do wizualizacji danych wykorzystam **wykres radarowy** z pakietu `library(fmsb)` ([Radar chart](https://r-graph-gallery.com/142-basic-radar-chart.html)):
+
+```{r}
+jokic_seasons <- nba_players %>%
+  filter(player_name == "Nikola Jokic") %>%
+  pull(season)
+
+filtered_data <- nba_players %>%
+  filter(season %in% jokic_seasons) %>%
+  mutate(group = ifelse(player_name == "Nikola Jokic", "Nikola Jokic", "Pozostali zawodnicy")) %>%
+  group_by(group) %>%
+  summarise(
+    avg_pts = mean(pts),
+    avg_reb = mean(reb),
+    avg_ast = mean(ast),
+    avg_ts_pct = mean(ts_pct)
+  ) %>%
+  as.data.frame()
+
+radar_data <- rbind(
+  max = c(35, 15, 10, 0.7),
+  min = c(0, 0, 0, 0),
+  filtered_data[, -1]
+)
+
+rownames(radar_data) <- c("Max", "Min", filtered_data$group)
+
+radarchart(radar_data,
+           axistype = 1, 
+           pcol = c("dodgerblue", "goldenrod"), 
+           pfcol = c(rgb(0, 0, 1, 0.3), rgb(0, 1, 0, 0.3)),
+           cglcol = "grey", cglty = 1,
+           caxislabels = seq(0, 30, 5), 
+           vlcex = 1.2)
+
+legend("topright", legend = c("Nikola Jokic", "Pozostali zawodnicy"), 
+       cex = 1.1, fill = c(rgb(0, 0, 1, 0.3), rgb(0, 1, 0, 0.3)))
+```
+
+Przykład Jokicia podkreśla, że talent i praca nad sobą mogą przeważyć nad początkowym miejscem w drafcie.
+
+## Jak grają najlepiej zarabiający koszykarze?
+
+Ze wstępu dowiedzieliśmy się o najlepiej zarabiających koszykarzach. Teraz przyjrzyjmy się, jak przebiegało ich ostatnie pięć sezonów na tle wszystkich grających zawodników NBA. Czy istnieje zależność między wysokością wynagrodzenia a efektywnością na boisku? Aby to sprawdzić, wykorzystamy połączenie danych z zestawień `athletes_forbes` oraz `nba_players`:
+
+```{r warning=FALSE}
+
+top_5_names <- athletes_forbes %>%
+  filter(SPORT == "Basketball") %>%
+  slice_head(n = 5) %>%
+  pull(NAME)
+nba_with_stats <- nba_players %>%
+  filter(season %in% c("2018-19", "2019-20", "2020-21", "2021-22", "2022-23")) %>%
+  mutate(is_top5 = ifelse(player_name %in% top_5_names, player_name, "Średnia wszystkich"))
+
+summary_stats <- nba_with_stats %>%
+  group_by(is_top5, season) %>%
+  summarise(
+    avg_net_rating = mean(net_rating, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+colors <- c("black", "red", "dodgerblue", "forestgreen", "goldenrod", "purple", "brown")
+
+player_color_mapping <- setNames(colors[1:length(unique(summary_stats$is_top5))], unique(summary_stats$is_top5))
+
+ggplot(summary_stats, aes(x = season, y = avg_net_rating, color = is_top5, group = is_top5)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  scale_color_manual(
+    values = player_color_mapping
+  ) +
+  labs(
+    title = "Net Rating najlepiej zarabiających koszykarzy i średnia ligi (2018-2023)",
+    x = "Sezon",
+    y = "Średni Net Rating",
+    color = "Gracz"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  )
+
+```
+
+Z powyższego wykresu jednoznacznie wynika, że gra koszykarzy z listy Forbes przewyższa wyniki preciętnego gracza NBA.
+
+#### Uwaga
+
+W sezonie 2019/20 Stephen Curry doznał poważnej kontuzji (dlatego też możemy zauważyć odchylenie w jego `net_rating`), która mocno wpłynęła na jego udział w rozgrywkach. Stephen Curry wrócił do gry 5 marca 2020 roku w meczu przeciwko Toronto Raptors, jednak pandemia COVID-19 przerwała sezon zaledwie kilka dni później.
+
+## Z jakich uniwersytetów pochodzą najlepsi koszykarze?
+
+Droga do NBA, bardzo często choć nie zawsze, zaczyna się na **uniwersyteckich parkietach**, gdzie młodzi zawodnicy rozwijają swoje umiejętności i przygotowują się do zawodowej kariery. Najbardziej utalentowani gracze trafiają do czołowych programów koszykarskich, które słyną z wybitnych trenerów, doskonałych warunków treningowych i historii sukcesów. **Moim zdaniem uniwersytety powoli tracą na znaczeniu na rzecz zagranicznych transferów/skautingu**.
+
+```{r}
+nba_2022 <- nba_players %>%
+  filter(season == "2022-23")
+
+college_stats_2022 <- nba_2022 %>%
+  group_by(college) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+
+top_colleges_2022 <- college_stats_2022 %>%
+  filter(!is.na(college)) %>%
+  head(10)
+
+bar_plot <- ggplot(top_colleges_2022, aes(x = reorder(college, count), y = count, fill = count)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_gradient(low = "red", high = "darkred") +
+  labs(title = "Top 10 uniwersytetów, których gracze dołączyli do NBA (2022-23)",
+       x = "Uniwersytet",
+       y = "Liczba graczy",
+       fill = "Liczba graczy") +
+  theme_minimal(base_size = 15)
+
+bar_plot
+```
+
+-   Kategoria oznaczona jako **None** wskazuje, że największa grupa zawodników NBA w sezonie 2022-2023 nie grała na poziomie akademickim w USA. Obejmuje to zawodników międzynarodowych oraz tych, którzy ominęli system.
+-   **Uniwersytet Kentucky** jest na czele wśród placówek akademickich, z największą liczbą graczy w NBA spośród wszystkich uniwersytetów.
+-   Duży udział zawodników spoza systemu akademickiego USA podkreśla rosnący wpływ międzynarodowego skautingu.
+
+Moja hipoteza została potwierdzona.
+
+## Zróżnicowanie etniczne w NBA. Z jakiego kraju pochodzą najlepsi koszykarze?
+
+Jak wykazaliśmy w poprzednim punkcie, większość zawodników w poprzedniego sezonu nie grała na poziomie akademickim w Stanach Zjednoczonych. Jest to dowód na zmieniającą się sytuację na świecie oraz wpływ zawodników spoza Ameryki Północnej na ligę NBA. Przykładem może być nietypowy przypadek Nikoli Jokića, fenomenalnego zawodnika z Serbii, który już wcześniej omówiliśmy. Czy jednak zawodnicy ze Stanów Zjednoczonych i Kanady wciąż dominują w swojej rodzimej lidze?
+
+```{r}
+
+nba_season_nationality <- nba_players %>%
+  filter(season %in% c("1996-97", "2022-23")) %>%
+  mutate(category = ifelse(country == "USA", "USA", "Zagranica")) %>%
+  group_by(season, category) %>%
+  summarise(count = n(), .groups = "drop")
+
+ggplot(nba_season_nationality, aes(x = category, y = count, fill = season)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  scale_fill_manual(values = c("1996-97" = "dodgerblue", "2022-23" = "goldenrod")) +
+  labs(
+    title = "Porównanie liczby graczy z USA i międzynarodowych w sezonach 1996-97 i 2022-23",
+    x = "Kategoria",
+    y = "Liczba graczy",
+    fill = "Sezon"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+Zawodnicy ze Stanów wciąż dominują amerykańskie parkiety. W sezonie **1996-97** liczba zawodników międzynarodowych była marginalna w porównaniu do graczy z USA. Co więcej, dane pokazują, że NBA staje się coraz bardziej różnorodna narodowościowo, przyciągając talenty z całego świata. Stany nadal, choć ze spadkiem, dominują swoją ligę. Jakie pozostałe nacje uplasują się w *Top 5* sezonu **2022-23**?
+
+```{r}
+top_5_nationalities_2022 <- nba_players %>%
+  filter(season == "2022-23") %>%
+  group_by(country) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  head(5)
+
+kable(top_5_nationalities_2022)
+```
+
+-   Druga pozycja Kanady nie jest zaskakująca, biorąc pod uwagę **bliskość geograficzną, kulturową i gospodarczą** Kanady w stosunku do USA.
+-   Czwartą pozycję zajmują Francuzi, a piątą Hiszpanie. Reprezentacji krajów starego kontynetu zazwycaj zaczynają swoją karierę na parkietach europejskich.
+-   Australia plasuje się na trzeciej pozycji. Jest to dosyć nietypowa narodowość, w lepszym zrozumieniu tego przypadku może nam pomóc sprawdzenie **ilu graczy z Australii dostało się do ligi poprzez draft**:
+
+```{r warning=FALSE}
+australiaDraft <- nba_players %>%
+  filter(country == "Australia", 
+         !is.na(draft_year), 
+         decade == "2016-2023") %>%
+  distinct(player_name, draft_year) %>%
+  summarise(liczba_zawodnikow = n())
+australiaDraft
+```
+
+Co ciekawe australijscy gracze często korzystają z amerykańskiego systemu akademickiego.
+
+## Czy dawny “emerytowany” koszykarz byłby współczesnym młodym talentem?
+
+W mojej pracy udowodniłem już, że wraz z upływem lat parkiety NBA przeszły **szereg istotnych zmian**. Ewoluowało nie tylko podejście do taktyki i strategii zespołów, ale również różnorodność zawodników, którzy zasiliły ligę. Jednak rozwój nie dotyczy jedynie koszykówki. Cały świat poszedł naprzód – wraz z nim medycyna, technologia oraz nasza wiedza na temat fizjologii człowieka. Jeśli dodamy do tego świadomość, że ciało koszykarza jest jego „narzędziem” na boisku, możemy dojść do wniosku, że współcześni zawodnicy prezentują wyższy poziom gry niż ich poprzednicy. To odważna hipoteza, na którą jednak się nie zdecyduję, ponieważ na występy poszczególnych graczy wpływa o wiele więcej czynników niż tylko ich parametry fizyczne. Dlatego zastanówmy się nad przeciętnym wiekiem zawodników NBA, **czy dzięki bardziej szczegółowym badaniom i lepszej aparaturze medycznej możemy zaobserwować tendencję wzrostową?** Inspiracją do zadania sobie tego pytania jest porównywanie dwóch wybitnych koszykarzy: LeBrona Jamesa oraz Michaela Jordana. Pierwszy z nich gra obecnie swój 21 sezon na poziomie NBA i wciąż dominuje pojedyńcze mecze, drugi rał 15 sezonów w NBA, jednak jego kariera była przerwana kilkoma okresami "emerytury", a u schyłku kariery (wiek 38–40) grał na solidnym poziomie, ale daleko od swoich najlepszych lat.
+
+```{r message=FALSE, warning=FALSE}
+age_trends <- nba_players %>%
+  group_by(season) %>%
+  summarise(avg_age = mean(age)) %>%
+  mutate(season_numeric = as.numeric(sub("-.+", "", season))) 
+
+age_trend_model <- lm(avg_age ~ season_numeric, data = age_trends)
+
+ggplot(age_trends, aes(x = season_numeric, y = avg_age)) +
+  geom_point(color = "goldenrod", size = 3) +
+  geom_smooth(method = "lm", color = "dodgerblue", se = TRUE) +
+  labs(
+    title = "średni wiek zawodników NBA (96-97 do 22-23)",
+    x = "Sezon (rok rozpoczęcia)",
+    y = "Średnia wieku"
+  ) +
+  theme_minimal()
+```
+
+Moja wstępna hipoteza, że średni wiek zawodników NBA wydłużył się w czasie, **okazała się błędna**. Zamiast tego, dane jasno pokazują, że przeciętny wiek zawodników w NBA stopniowo maleje. Wyniki modelu regresji liniowej oraz wizualizacja trendu wskazują na wyraźną tendencję spadkową w analizowanym okresie. owyższe obserwacje mogą być jedynie częścią większej układanki, którą stanowi zmieniający się charakter ligi NBA. Chociaż przykłady takie jak LeBron James – grający na najwyższym poziomie w swoim 21. sezonie – są godne podziwu, ale raczej stanowią wyjątek aniżeli regułę.
+
+```{r}
+nba_players %>%
+  filter(season == "2022-23" & age > 35) %>%
+  nrow()
+
+nba_players %>%
+  filter(season == "1996-97" & age > 35) %>%
+  nrow()
+```
+
+W sezonie 1995-96 na parkietach NBA występowało 22 zawodników z ukończonym 35 rokiem życia, zaś w sezonie 2022-23 jest ich o 6 mniej, przy jednoczesnym zwiększeniu się całkowitej liczby graczy w lidze.
+
+## Czy Robert Lewandowski zostałby gwiazdą współczesnego NBA?
+
+Dotarliśmy do tytułowego pytania. Mam nadzieję, że wcześniejsze części artykułu udowodniły, iż występy zawodników w sporcie zależą od niezliczonych, często nieprzewidywalnych zmiennych. Dlatego w tej sekcji pozwólmy sobie na odrobinę zabawy i spojrzenie na temat *z przymrużeniem oka*. Przyjrzyjmy się, jak mógłby wyglądać hipotetyczny świat, w którym **Robert Lewandowski staje się gwiazdą NBA**. Oto nasz plan działania:
+
+-   Wczytajmy parametry naszego zawodnika (wzrost, waga)
+
+```{r}
+lewandowski <- data.frame(player_name = "Robert Lewandowski", player_height = 185, player_weight = 79)
+```
+
+-   Utwórzmy model przewidywania
+
+```{r}
+model_pts <- lm(pts ~ player_height * player_weight, data = nba_players %>% filter(decade == "2016-2023"))
+model_reb <- lm(reb ~ player_height * player_weight, data = nba_players %>% filter(decade == "2016-2023"))
+model_ast <- lm(ast ~ player_height * player_weight, data = nba_players %>% filter(decade == "2016-2023"))
+
+predicted_pts <- max(predict(model_pts, newdata = lewandowski), 0)
+predicted_reb <- max(predict(model_reb, newdata = lewandowski), 0)
+predicted_ast <- max(predict(model_ast, newdata = lewandowski), 0)
+```
+
+-   Sprawdźmy jak wgrany zawodnik poradziłby sobie jako koszykarz
+
+```{r}
+lewandowski_stats <- data.frame(
+  player_name = lewandowski$player_name,
+  player_height = lewandowski$player_height,
+  player_weight = lewandowski$player_weight,
+  predicted_pts = predicted_pts,
+  predicted_reb = predicted_reb,
+  predicted_ast = predicted_ast
+)
+kable(lewandowski_stats)
+```
+
+Na podstawie przewidywanych statystyk dla Roberta Lewandowskiego, możemy zauważyć następujące rzeczy:
+
+-   Robert Lewandowski zdobyłby średnio *7.09 punktów w meczu*. Jego profil fizyczny może nie przekładać się bezpośrednio na wysokie osiągi punktowe w lidze
+-   Przewidywana *liczba zbiórek wynosi 1.66*. Jest to stosunkowo niska wartość, sugerująca, że Lewandowski, mimo solidnej postury, **nie wyróżniałby się w grze pod koszem**.
+-   Przewidywana *liczba asyst wynosi 2.22*. Jest to stosunkowo umiarkowany wynik.
+
+Na podstawie przewidywanych statystyk, Robert Lewandowski mógłby odgrywać rolę solidnego zawodnika w NBA, ale z pewnością nie osiągnąłby takich sukcesów jak w piłce nożnej.
+
+Kończąc ten podpunkt, porównajmy jeszcze przewidywane statystyki Roberta Lewandowskiego ze statystykami Jeremy'ego Sochana w jego debutanckim sezonie. Warto zauważyć, że nasza metoda przewidywania nie brała pod uwagę takich aspektów jak np. **doświadczenie lub dyspozycja zawodnika w danym sezonie**.
+
+```{r}
+lewandowski_stats <- c(predicted_pts, predicted_reb, predicted_ast)
+
+sochan_stats <- nba_players %>%
+  filter(player_name == "Jeremy Sochan") %>%
+  summarise(pts = mean(pts), reb = mean(reb), ast = mean(ast)) %>%
+  unlist()
+
+data <- rbind(
+  lewandowski_stats, 
+  sochan_stats
+)
+
+colnames(data) <- c("Punkty", "Zbórki", "Asysty")
+
+radar_data <- as.data.frame(data)
+radar_data <- rbind(
+  max = rep(30, 3), 
+  min = rep(0, 3), 
+  radar_data
+)
+
+radarchart(radar_data, 
+           axistype = 1, 
+           pcol = c("dodgerblue", "goldenrod"), 
+           pfcol = c(rgb(0, 0, 1, 0.2), rgb(0, 1, 0, 0.2)),
+           cglcol = "grey", cglty = 1,
+           caxislabels = seq(0, 30, 5), 
+           vlcex = 1.2)
+
+legend("topright", legend = c("Lewandowski", "Jeremy Sochan"), 
+       fill = c(rgb(0, 0, 1, 0.3), rgb(0, 1, 0, 0.3)), 
+       bty = "n", border = "black")
+
+```
+
+Statystyki Lewandowskiego i Sochana są dość zbliżone, szczególnie w kategoriach takich jak punkty i asysty. Jednak biorąc pod uwagę, że był to debiutancki sezon Jeremiego Sochana w NBA, jego przewaga w zbiórkach oraz wszechstronność w innych obszarach gry wskazują, że jest lepszym koszykarzem.
+
+# Podsumowanie
+
+Przeprowadzona EDA pozwoliła rzucić światło na wiele fascynujących aspektów związanych z NBA. Dowiedzieliśmy się, że choć wzrost w koszykówce często jest uznawany za klucz do sukcesu, istnieją zawodnicy, którzy potrafią odnosić spektakularne wyniki, mimo że nie pasują do klasycznego profilu koszykarza. Zobaczyliśmy także, jak na przestrzeni lat zmieniała się fizyczność zawodników i czy wybór w drafcie faktycznie determinuje przyszłe sukcesy. Mam nadzieję, że ta analiza pokazała, jak **wiele ciekawych informacji kryje się w danych sportowych** i jak mogą one poszerzyć nasze spojrzenie na tak dynamiczną dyscyplinę jak koszykówka.
