@@ -1,0 +1,306 @@
+RANK;NAME;RANK;SPORT;TOTAL EARNINGS ;ON-THE-FIELD EARNINGS ;OFF-THE-FIELD EARNINGS 
+NAME;Cristiano Ronaldo;1;Soccer;$260 M;$200 M;$60 M
+SPORT;Jon Rahm;2;Golf;$218 M;$198 M;$20 M
+TOTAL EARNINGS ;Lionel Messi;3;Soccer;$135 M;$65 M;$70 M
+ON-THE-FIELD EARNINGS ;LeBron James;4;Basketball;$128.2 M;$48.2 M;$80 M
+OFF-THE-FIELD EARNINGS ;Giannis Antetokounmpo;5;Basketball;$111 M;$46 M;$65 M
+1;Kylian Mbapp‚;6;Soccer;$110 M;$90 M;$20 M
+Cristiano Ronaldo;Neymar;7;Soccer;$108 M;$80 M;$28 M
+Soccer;Karim Benzema;8;Soccer;$106 M;$100 M;$6 M
+$260 M;Stephen Curry;9;Basketball;$102 M;$52 M;$50 M
+$200 M;Lamar Jackson;10;Football;$100.5 M;$98.5 M;$2 M
+$60 M;Joe Burrow;11;Football;$100 M;$96 M;$4 M
+2;Kevin Durant;12;Basketball;$93.3 M;$47.8 M;$45.5 M
+Jon Rahm;Shohei Ohtani;13;Baseball;$85.3 M;$25.3 M;$60 M
+Golf;Canelo Alvarez;14;Boxing;$85 M;$75 M;$10 M
+$218 M;Patrick Mahomes;15;Football;$84.4 M;$59.4 M;$25 M
+$198 M;Anthony Joshua;16;Boxing;$83 M;$75 M;$8 M
+$20 M;Max Verstappen;17;Auto Racing;$81 M;$76 M;$5 M
+3;Aaron Rodgers;18;Football;$80.8 M;$71.8 M;$9 M
+Lionel Messi;Rory McIlroy;19;Golf;$80.1 M;$35.1 M;$45 M
+Soccer;Justin Herbert;20;Football;$78.7 M;$67.7 M;$11 M
+$135 M;Lewis Hamilton;21;Auto Racing;$69 M;$57 M;$12 M
+$65 M;Nick Bosa;22;Football;$68 M;$66.5 M;$1.5 M
+$70 M;Tiger Woods;23;Golf;$67.2 M;$12.2 M;$55 M
+4;Kirk Cousins;24;Football;$62.5 M;$60 M;$2.5 M
+LeBron James;Klay Thompson;25;Basketball;$62.3 M;$43.3 M;$19 M
+Basketball;Damian Lillard;26;Basketball;$61.9 M;$45.9 M;$16 M
+$128.2 M;Erling Haaland;27;Soccer;$61 M;$46 M;$15 M
+$48.2 M;Max Scherzer;28;Baseball;$59.9 M;$58.9 M;$1 M
+$80 M;Scottie Scheffler;29;Golf;$59.2 M;$39.2 M;$20 M
+5;Joel Embiid;30;Basketball;$57.7 M;$47.7 M;$10 M
+Giannis Antetokounmpo;Jimmy Butler;31;Basketball;$57.5 M;$45.5 M;$12 M
+Basketball;Nikola Jokic;32;Basketball;$56.1 M;$48.1 M;$8 M
+$111 M;James Harden;33;Basketball;$55.8 M;$35.8 M;$20 M
+$46 M;Luka Doncic;34;Basketball;$55.1 M;$40.1 M;$15 M
+$65 M;Bradley Beal;35;Basketball;$54.3 M;$46.8 M;$7.5 M
+6;Chris Jones;36;Football;$54.1 M;$53.1 M;$1 M
+Kylian Mbapp‚;Kawhi Leonard;37;Basketball;$53.7 M;$45.7 M;$8 M
+Soccer;Mohamed Salah;38;Soccer;$53 M;$35 M;$18 M
+$110 M;Paul George;39;Basketball;$52.7 M;$45.7 M;$7 M
+$90 M;Sadio Man‚;40;Soccer;$52 M;$48 M;$4 M
+$20 M;Brian Burns;41;Football;$51.7 M;$51.5 M;$0.2 M
+7;Tyson Fury;42;Boxing;$50 M;$42 M;$8 M
+Neymar;Cameron Smith;43;Golf;$48 M;$44 M;$4 M
+Soccer;Trae Young;44;Basketball;$47.3 M;$40.3 M;$7 M
+$108 M;Deshaun Watson;45;Football;$47 M;$46 M;$1 M
+$80 M;Rashan Gary;46;Football;$46.8 M;$46.5 M;$0.3 M
+$28 M;Anthony Davis;47;Basketball;$46.2 M;$41.2 M;$5 M
+8;Zion Williamson;48;Basketball;$46.1 M;$34.1 M;$12 M
+Karim Benzema;Jayson Tatum;49;Basketball;$45.9 M;$32.9 M;$13 M
+Soccer;Devin Booker;50;Basketball;$45.2 M;$36.2 M;$9 M
+$106 M;;;;;;
+$100 M;;;;;;
+$6 M;;;;;;
+9;;;;;;
+Stephen Curry;;;;;;
+Basketball;;;;;;
+$102 M;;;;;;
+$52 M;;;;;;
+$50 M;;;;;;
+10;;;;;;
+Lamar Jackson;;;;;;
+Football;;;;;;
+$100.5 M;;;;;;
+$98.5 M;;;;;;
+$2 M;;;;;;
+11;;;;;;
+Joe Burrow;;;;;;
+Football;;;;;;
+$100 M;;;;;;
+$96 M;;;;;;
+$4 M;;;;;;
+12;;;;;;
+Kevin Durant;;;;;;
+Basketball;;;;;;
+$93.3 M;;;;;;
+$47.8 M;;;;;;
+$45.5 M;;;;;;
+13;;;;;;
+Shohei Ohtani;;;;;;
+Baseball;;;;;;
+$85.3 M;;;;;;
+$25.3 M;;;;;;
+$60 M;;;;;;
+14;;;;;;
+Canelo Alvarez;;;;;;
+Boxing;;;;;;
+$85 M;;;;;;
+$75 M;;;;;;
+$10 M;;;;;;
+15;;;;;;
+Patrick Mahomes;;;;;;
+Football;;;;;;
+$84.4 M;;;;;;
+$59.4 M;;;;;;
+$25 M;;;;;;
+16;;;;;;
+Anthony Joshua;;;;;;
+Boxing;;;;;;
+$83 M;;;;;;
+$75 M;;;;;;
+$8 M;;;;;;
+17;;;;;;
+Max Verstappen;;;;;;
+Auto Racing;;;;;;
+$81 M;;;;;;
+$76 M;;;;;;
+$5 M;;;;;;
+18;;;;;;
+Aaron Rodgers;;;;;;
+Football;;;;;;
+$80.8 M;;;;;;
+$71.8 M;;;;;;
+$9 M;;;;;;
+19;;;;;;
+Rory McIlroy;;;;;;
+Golf;;;;;;
+$80.1 M;;;;;;
+$35.1 M;;;;;;
+$45 M;;;;;;
+20;;;;;;
+Justin Herbert;;;;;;
+Football;;;;;;
+$78.7 M;;;;;;
+$67.7 M;;;;;;
+$11 M;;;;;;
+21;;;;;;
+Lewis Hamilton;;;;;;
+Auto Racing;;;;;;
+$69 M;;;;;;
+$57 M;;;;;;
+$12 M;;;;;;
+22;;;;;;
+Nick Bosa;;;;;;
+Football;;;;;;
+$68 M;;;;;;
+$66.5 M;;;;;;
+$1.5 M;;;;;;
+23;;;;;;
+Tiger Woods;;;;;;
+Golf;;;;;;
+$67.2 M;;;;;;
+$12.2 M;;;;;;
+$55 M;;;;;;
+24;;;;;;
+Kirk Cousins;;;;;;
+Football;;;;;;
+$62.5 M;;;;;;
+$60 M;;;;;;
+$2.5 M;;;;;;
+25;;;;;;
+Klay Thompson;;;;;;
+Basketball;;;;;;
+$62.3 M;;;;;;
+$43.3 M;;;;;;
+$19 M;;;;;;
+26;;;;;;
+Damian Lillard;;;;;;
+Basketball;;;;;;
+$61.9 M;;;;;;
+$45.9 M;;;;;;
+$16 M;;;;;;
+27;;;;;;
+Erling Haaland;;;;;;
+Soccer;;;;;;
+$61 M;;;;;;
+$46 M;;;;;;
+$15 M;;;;;;
+28;;;;;;
+Max Scherzer;;;;;;
+Baseball;;;;;;
+$59.9 M;;;;;;
+$58.9 M;;;;;;
+$1 M;;;;;;
+29;;;;;;
+Scottie Scheffler;;;;;;
+Golf;;;;;;
+$59.2 M;;;;;;
+$39.2 M;;;;;;
+$20 M;;;;;;
+30;;;;;;
+Joel Embiid;;;;;;
+Basketball;;;;;;
+$57.7 M;;;;;;
+$47.7 M;;;;;;
+$10 M;;;;;;
+31;;;;;;
+Jimmy Butler;;;;;;
+Basketball;;;;;;
+$57.5 M;;;;;;
+$45.5 M;;;;;;
+$12 M;;;;;;
+32;;;;;;
+Nikola Jokic;;;;;;
+Basketball;;;;;;
+$56.1 M;;;;;;
+$48.1 M;;;;;;
+$8 M;;;;;;
+33;;;;;;
+James Harden;;;;;;
+Basketball;;;;;;
+$55.8 M;;;;;;
+$35.8 M;;;;;;
+$20 M;;;;;;
+34;;;;;;
+Luka Doncic;;;;;;
+Basketball;;;;;;
+$55.1 M;;;;;;
+$40.1 M;;;;;;
+$15 M;;;;;;
+35;;;;;;
+Bradley Beal;;;;;;
+Basketball;;;;;;
+$54.3 M;;;;;;
+$46.8 M;;;;;;
+$7.5 M;;;;;;
+36;;;;;;
+Chris Jones;;;;;;
+Football;;;;;;
+$54.1 M;;;;;;
+$53.1 M;;;;;;
+$1 M;;;;;;
+37;;;;;;
+Kawhi Leonard;;;;;;
+Basketball;;;;;;
+$53.7 M;;;;;;
+$45.7 M;;;;;;
+$8 M;;;;;;
+38;;;;;;
+Mohamed Salah;;;;;;
+Soccer;;;;;;
+$53 M;;;;;;
+$35 M;;;;;;
+$18 M;;;;;;
+39;;;;;;
+Paul George;;;;;;
+Basketball;;;;;;
+$52.7 M;;;;;;
+$45.7 M;;;;;;
+$7 M;;;;;;
+40;;;;;;
+Sadio Man‚;;;;;;
+Soccer;;;;;;
+$52 M;;;;;;
+$48 M;;;;;;
+$4 M;;;;;;
+41;;;;;;
+Brian Burns;;;;;;
+Football;;;;;;
+$51.7 M;;;;;;
+$51.5 M;;;;;;
+$0.2 M;;;;;;
+42;;;;;;
+Tyson Fury;;;;;;
+Boxing;;;;;;
+$50 M;;;;;;
+$42 M;;;;;;
+$8 M;;;;;;
+43;;;;;;
+Cameron Smith;;;;;;
+Golf;;;;;;
+$48 M;;;;;;
+$44 M;;;;;;
+$4 M;;;;;;
+44;;;;;;
+Trae Young;;;;;;
+Basketball;;;;;;
+$47.3 M;;;;;;
+$40.3 M;;;;;;
+$7 M;;;;;;
+45;;;;;;
+Deshaun Watson;;;;;;
+Football;;;;;;
+$47 M;;;;;;
+$46 M;;;;;;
+$1 M;;;;;;
+46;;;;;;
+Rashan Gary;;;;;;
+Football;;;;;;
+$46.8 M;;;;;;
+$46.5 M;;;;;;
+$0.3 M;;;;;;
+47;;;;;;
+Anthony Davis;;;;;;
+Basketball;;;;;;
+$46.2 M;;;;;;
+$41.2 M;;;;;;
+$5 M;;;;;;
+48;;;;;;
+Zion Williamson;;;;;;
+Basketball;;;;;;
+$46.1 M;;;;;;
+$34.1 M;;;;;;
+$12 M;;;;;;
+49;;;;;;
+Jayson Tatum;;;;;;
+Basketball;;;;;;
+$45.9 M;;;;;;
+$32.9 M;;;;;;
+$13 M;;;;;;
+50;;;;;;
+Devin Booker;;;;;;
+Basketball;;;;;;
+$45.2 M;;;;;;
+$36.2 M;;;;;;
+$9 M;;;;;;
