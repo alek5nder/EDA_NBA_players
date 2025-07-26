@@ -1,6 +1,0 @@
-R codes for data sampling/processing.
-
-## Notes
-
-- Some scripts require specific R packages—see the main project README for installation instructions.  
-- Scripts are designed to be modular and easy to adapt for similar datasets or analyses.
